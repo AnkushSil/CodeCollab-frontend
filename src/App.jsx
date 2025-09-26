@@ -7,9 +7,10 @@ import GlassPanel from "./components/GlassPanel";
 import NeonButton from "./components/NeonButton";
 import axios from "axios";
 
-const socket = io("http://localhost:5000");
+const apiUrl = import.meta.env.VITE_API_URL;
+const socket = io(apiUrl);
 
-axios.defaults.baseURL = "http://localhost:5000";
+axios.defaults.baseURL = apiUrl;
 
 const App = () => {
     const [showLanding, setShowLanding] = useState(true);
