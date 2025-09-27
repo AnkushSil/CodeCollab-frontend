@@ -5,7 +5,9 @@ import SpaceBackground from "./SpaceBackground";
 import GlassPanel from "./GlassPanel";
 import NeonButton from "./NeonButton";
 
-const socket = io("http://localhost:5000");
+const apiUrl = import.meta.env.VITE_API_URL;
+
+const socket = io(apiUrl);
 
 const Room = ({ roomIdProp, userNameProp, onLeave }) => {
   const [language, setLanguage] = useState("javascript");
@@ -14,6 +16,7 @@ const Room = ({ roomIdProp, userNameProp, onLeave }) => {
   const [typing, setTyping] = useState("");
   const [copySuccess, setCopySuccess] = useState("");
   const [output, setOutput] = useState("");
+  const [stdin, setStdin] = useState("");
 
   const roomId = roomIdProp;
   const userName = userNameProp;
@@ -57,14 +60,20 @@ const Room = ({ roomIdProp, userNameProp, onLeave }) => {
   };
 
   const runCode = async () => {
+    setOutput("Running code...");
     try {
-      const res = await fetch("http://localhost:5000/compile", {
+      const res = await fetch(`${apiUrl}/compile`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ language, code }),
+        body: JSON.stringify({ language, code, stdin }),
       });
       const data = await res.json();
-      setOutput(data.output);
+      if (data.error) {
+        setOutput(`Error: ${data.error}`);
+      } else {
+        const formattedOutput = `Status: ${data.status}\nTime: ${data.time}s | Memory: ${data.memory} KB\n\n${data.output}`;
+        setOutput(formattedOutput);
+      }
     } catch (err) {
       setOutput("Error: " + err.message);
     }
@@ -156,14 +165,18 @@ const Room = ({ roomIdProp, userNameProp, onLeave }) => {
           </div>
 
           {/* Run button + output */}
-          <div className="p-3 bg-black/80 border-t border-white/10 h-32 overflow-auto">
-            <button
-              onClick={runCode}
-              className="px-4 py-2 bg-space-blue text-white rounded-lg hover:bg-space-blue/80"
-            >
-              Run Code
-            </button>
-            <pre className="mt-3 text-sm text-green-300 whitespace-pre-wrap">
+          <div className="p-3 bg-black/80 border-t border-white/10 flex flex-col h-48">
+            <div className="flex items-center gap-4 mb-2">
+              <NeonButton onClick={runCode}>Run Code</NeonButton>
+              <textarea
+                value={stdin}
+                onChange={(e) => setStdin(e.target.value)}
+                placeholder="Enter input (stdin) here..."
+                className="flex-1 p-2 rounded-md bg-gray-900 text-white border border-gray-600 focus:outline-none focus:ring-2 focus:ring-space-blue text-sm h-10"
+                rows={1}
+              />
+            </div>
+            <pre className="flex-1 mt-2 text-sm text-green-300 whitespace-pre-wrap bg-gray-900 p-3 rounded-md overflow-auto">
               {output || "Output will appear here..."}
             </pre>
           </div>

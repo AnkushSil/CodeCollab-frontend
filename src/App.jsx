@@ -101,7 +101,7 @@ const App = () => {
     const runCode = async () => {
       setOutput("Running code...");
       try {
-        const res = await fetch("http://localhost:5000/compile", {
+        const res = await fetch(`${apiUrl}/compile`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ language, code, stdin }),
